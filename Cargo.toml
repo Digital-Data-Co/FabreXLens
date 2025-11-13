@@ -1,0 +1,24 @@
+[package]
+name = "fabrexlens"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+config = "0.14"
+dialoguer = "0.11"
+directories = "5.0"
+eframe = { version = "0.27", features = ["wgpu"] }
+keyring = "2.3"
+reqwest = { version = "0.11", features = ["json", "gzip", "stream", "rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tokio = { version = "1.36", features = ["rt-multi-thread", "macros", "sync"] }
+crossbeam-channel = "0.5"
+url = "2.5"
+
+[dev-dependencies]
+httpmock = "0.7"
+

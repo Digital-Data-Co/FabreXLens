@@ -1,0 +1,12 @@
+# Build artifacts
+/target/
+
+# Docs drop zone
+/docs/api/*
+!docs/api/README.md
+
+# Editor & OS
+**/*.swp
+.DS_Store
+.idea/
+.vscode/
