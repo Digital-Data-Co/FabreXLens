@@ -1,5 +1,5 @@
-use clap::{Parser, Subcommand, ValueEnum};
 use crate::services::auth::CredentialDomain;
+use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 /// Command line interface for FabreXLens.
@@ -56,4 +56,3 @@ impl From<CredentialDomainArg> for CredentialDomain {
         }
     }
 }
-

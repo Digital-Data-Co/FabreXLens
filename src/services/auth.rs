@@ -231,8 +231,7 @@ impl CredentialManager {
     }
 
     pub fn with_default_keyring() -> Self {
-        let store: Arc<dyn CredentialStore> =
-            Arc::new(KeyringCredentialStore::new("FabreXLens"));
+        let store: Arc<dyn CredentialStore> = Arc::new(KeyringCredentialStore::new("FabreXLens"));
         Self::new(store)
     }
 
@@ -448,4 +447,3 @@ mod tests {
         assert!(ctx.basic.is_none());
     }
 }
-

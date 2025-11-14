@@ -200,11 +200,7 @@ mod tests {
         let config = ApiClientConfig::try_from_url(&server.url("/")).unwrap();
         let client = SupernodeClient::new(config).unwrap();
         let response = client
-            .invoke_action(
-                "node-1",
-                "restart",
-                Some(json!({ "graceful": true })),
-            )
+            .invoke_action("node-1", "restart", Some(json!({ "graceful": true })))
             .await
             .unwrap();
 
@@ -212,4 +208,3 @@ mod tests {
         assert_eq!(response.status, "accepted");
     }
 }
-

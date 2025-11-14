@@ -66,7 +66,11 @@ impl HttpClient {
         }
     }
 
-    pub async fn get_json<T>(&self, path: &str, auth: Option<&AuthContext>) -> Result<ApiResponse<T>, ApiError>
+    pub async fn get_json<T>(
+        &self,
+        path: &str,
+        auth: Option<&AuthContext>,
+    ) -> Result<ApiResponse<T>, ApiError>
     where
         T: DeserializeOwned,
     {
@@ -116,7 +120,8 @@ impl HttpClient {
         T: DeserializeOwned,
         B: Serialize + ?Sized,
     {
-        self.request_json(Method::POST, path, Some(body), auth).await
+        self.request_json(Method::POST, path, Some(body), auth)
+            .await
     }
 
     pub async fn request_json<T, B>(
@@ -147,17 +152,14 @@ impl HttpClient {
     {
         let status = response.status();
         let headers = response.headers().clone();
-        let body = response
-            .text()
-            .await
-            .map_err(ApiError::Request)?;
+        let body = response.text().await.map_err(ApiError::Request)?;
 
         if !status.is_success() {
             return Err(ApiError::HttpStatus { status, body });
         }
 
-        let data = serde_json::from_str(&body)
-            .map_err(|source| ApiError::Deserialize { source, body })?;
+        let data =
+            serde_json::from_str(&body).map_err(|source| ApiError::Deserialize { source, body })?;
 
         Ok(ApiResponse {
             data,
@@ -259,4 +261,3 @@ pub enum ApiError {
     #[error("missing expected authentication token in response headers")]
     MissingAuthToken,
 }
-

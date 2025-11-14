@@ -5,11 +5,7 @@ pub mod redfish;
 pub mod supernode;
 
 pub use fabrex::{
-    FabrexClient,
-    FabrexEndpoint,
-    FabrexFabric,
-    FabrexReassignmentResult,
-    FabrexUsage,
+    FabrexClient, FabrexEndpoint, FabrexFabric, FabrexReassignmentResult, FabrexUsage,
 };
 pub use gryf::{GryfClient, GryfReassignmentResult, GryfWorkload};
 pub use http::{
@@ -17,4 +13,3 @@ pub use http::{
 };
 pub use redfish::RedfishClient;
 pub use supernode::{SupernodeActionResponse, SupernodeClient, SupernodeNode};
-

@@ -40,10 +40,7 @@ impl AppConfig {
             .set_default("application_name", defaults.application_name.clone())?
             .set_default("fabrex_base_url", defaults.fabrex_base_url.clone())?
             .set_default("gryf_base_url", defaults.gryf_base_url.clone())?
-            .set_default(
-                "supernode_base_url",
-                defaults.supernode_base_url.clone(),
-            )?
+            .set_default("supernode_base_url", defaults.supernode_base_url.clone())?
             .set_default("poll_interval_secs", defaults.poll_interval_secs)?;
 
         if let Some(profile) = &cli.profile {
@@ -75,4 +72,3 @@ impl AppConfig {
             .map(|dirs| dirs.config_dir().join(file_name))
     }
 }
-

@@ -14,11 +14,7 @@ fn main() -> Result<()> {
     panic::set_hook(Box::new(|info| {
         eprintln!("FabreXLens panic: {info}");
         if let Some(location) = info.location() {
-            eprintln!(
-                "  at {}:{}",
-                location.file(),
-                location.line()
-            );
+            eprintln!("  at {}:{}", location.file(), location.line());
         }
     }));
 
@@ -53,4 +49,3 @@ fn handle_command(command: Command) -> Result<()> {
     }
     Ok(())
 }
-

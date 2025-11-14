@@ -70,9 +70,7 @@ impl FabrexClient {
         endpoint_id: &str,
         target_supernode: &str,
     ) -> Result<FabrexReassignmentResult, ApiError> {
-        let path = format!(
-            "/fabrics/{fabric_id}/endpoints/{endpoint_id}/reassign"
-        );
+        let path = format!("/fabrics/{fabric_id}/endpoints/{endpoint_id}/reassign");
         let payload = json!({
             "targetSupernodeId": target_supernode
         });
@@ -205,8 +203,7 @@ mod tests {
     async fn retrieves_usage() {
         let server = MockServer::start();
         let _mock = server.mock(|when, then| {
-            when.method(GET)
-                .path("/fabrics/fab-1/usage");
+            when.method(GET).path("/fabrics/fab-1/usage");
             then.status(200).json_body(json!({
                 "fabricId": "fab-1",
                 "utilizationPercent": 76.3,
@@ -250,4 +247,3 @@ mod tests {
         assert_eq!(result.status, "accepted");
     }
 }
-

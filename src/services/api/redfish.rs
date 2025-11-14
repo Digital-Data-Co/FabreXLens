@@ -28,11 +28,7 @@ impl RedfishClient {
 
         let response = self
             .http
-            .post_json::<RedfishSessionPayload, _>(
-                "/redfish/v1/Sessions",
-                &payload,
-                None,
-            )
+            .post_json::<RedfishSessionPayload, _>("/redfish/v1/Sessions", &payload, None)
             .await?;
 
         let token = response
@@ -90,4 +86,3 @@ mod tests {
         assert_eq!(session.auth_token, "token123");
     }
 }
-

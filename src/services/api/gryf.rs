@@ -232,4 +232,3 @@ mod tests {
         assert_eq!(result.status, "accepted");
     }
 }
-
