@@ -8,8 +8,20 @@ use crate::cli::Command;
 use crate::services::auth::{CredentialKey, CredentialManager};
 use anyhow::Result;
 use clap::Parser;
+use std::panic;
 
 fn main() -> Result<()> {
+    panic::set_hook(Box::new(|info| {
+        eprintln!("FabreXLens panic: {info}");
+        if let Some(location) = info.location() {
+            eprintln!(
+                "  at {}:{}",
+                location.file(),
+                location.line()
+            );
+        }
+    }));
+
     let cli = cli::Cli::parse();
 
     if let Some(command) = cli.command.clone() {

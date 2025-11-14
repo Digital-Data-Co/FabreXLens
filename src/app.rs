@@ -34,7 +34,11 @@ pub fn run(config: AppConfig) -> Result<()> {
         &app_name,
         native_options,
         Box::new(move |cc| {
-            FabreXLensApp::new(cc, shared_config.clone(), credential_manager.clone())
+            Ok(FabreXLensApp::new(
+                cc,
+                shared_config.clone(),
+                credential_manager.clone(),
+            ))
         }),
     )
     .map_err(|err| anyhow!(err.to_string()))
@@ -346,7 +350,7 @@ impl FabreXLensApp {
             if ui
                 .add(
                     egui::DragValue::new(&mut interval)
-                        .clamp_range(5.0..=600.0)
+                        .range(5.0..=600.0)
                         .suffix(" s"),
                 )
                 .changed()
