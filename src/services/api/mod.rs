@@ -8,7 +8,5 @@ pub use fabrex::{
     FabrexClient, FabrexEndpoint, FabrexFabric, FabrexReassignmentResult, FabrexUsage,
 };
 pub use gryf::{GryfClient, GryfWorkload};
-pub use http::{
-    ApiClientConfig, AuthContext,
-};
+pub use http::{ApiClientConfig, AuthContext};
 pub use supernode::{SupernodeClient, SupernodeNode};
