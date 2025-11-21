@@ -91,6 +91,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
+          rustup target add ${{ matrix.target }}
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -111,7 +112,7 @@ jobs:
       - name: Strip binary (Unix)
         if: runner.os != 'Windows'
         run: |
-          strip target/${{ matrix.target }}/release/${{ matrix.binary_name }}
+          strip target/${{ matrix.target }}/release/${{ matrix.binary_name }} || true
 
       - name: Get binary size
         id: binary_size
@@ -174,8 +175,8 @@ jobs:
       - name: Prepare release assets
         run: |
           mkdir -p release-assets
-          find artifacts -type f -name "fabrexlens*" ! -name "*.sha256" -exec cp {} release-assets/ \;
-          find artifacts -type f -name "*.sha256" -exec cp {} release-assets/ \;
+          find artifacts -type f -name "fabrexlens*" ! -name "*.sha256" -exec cp {} release-assets/ \; || true
+          find artifacts -type f -name "*.sha256" -exec cp {} release-assets/ \; || true
 
       - name: Create release archive
         run: |
