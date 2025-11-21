@@ -95,11 +95,28 @@ This project uses GitHub Actions for automated building and testing:
 
 - **CI Workflow**: Runs on every push/PR for quick feedback (formatting, clippy, tests)
 - **Build Workflow**: Creates release binaries for all platforms (Linux, macOS, Windows)
-- **Automatic Releases**: When you create a GitHub release, binaries are automatically attached
+- **Automatic Releases**: Pushing a tag starting with `v` (e.g., `v0.1.0`) automatically creates a public release with all binaries attached
 
-See [.github/workflows/README.md](.github/workflows/README.md) for details.
+See [.github/workflows/README.md](.github/workflows/README.md) for workflow details.
 
-Build artifacts are available in the [Actions](https://github.com/Digital-Data-Co/FabreXLens/actions) tab.
+### Releases
+
+Releases are automatically created when you push a tag. See [RELEASES.md](RELEASES.md) for the complete release process.
+
+**Quick release:**
+```bash
+git tag -a v0.1.0 -m "Release version 0.1.0"
+git push origin main
+git push origin v0.1.0
+```
+
+This will automatically:
+- Build binaries for all platforms
+- Create a public GitHub release
+- Attach all artifacts with checksums
+- Generate release notes from git commits
+
+Download the latest release from the [Releases](https://github.com/Digital-Data-Co/FabreXLens/releases) page.
 
 ## Roadmap
 
