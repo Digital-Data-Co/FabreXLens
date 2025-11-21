@@ -3,6 +3,8 @@ name: Build and Test
 on:
   push:
     branches: [ main, master, develop ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main, master, develop ]
   workflow_dispatch:
@@ -164,8 +166,61 @@ jobs:
     name: Create Release
     needs: [test, build]
     runs-on: ubuntu-latest
-    if: github.event_name == 'release'
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release'
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          if [ "${{ github.event_name }}" == "release" ]; then
+            NOTES="${{ github.event.release.body }}"
+          else
+            # Generate changelog from git commits since last tag
+            PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -z "$PREV_TAG" ]; then
+              NOTES="## What's Changed
+
+Initial release of FabreXLens!
+
+### Features
+- Interactive observability tool for GigaIO FabreX fabrics
+- Secure credential management with system keychain
+- Real-time dashboard with auto-refresh
+- Multi-platform support (Linux, macOS, Windows)
+
+### Downloads
+Binaries are available for all supported platforms below."
+            else
+              NOTES="## What's Changed
+
+### Changes since $PREV_TAG
+
+$(git log ${PREV_TAG}..HEAD --pretty=format:'- %s (%h)' --no-merges)
+
+### Downloads
+Binaries are available for all supported platforms below."
+            fi
+          fi
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -174,29 +229,32 @@ jobs:
       - name: Prepare release assets
         run: |
           mkdir -p release-assets
+          # Copy binaries and checksums
           find artifacts -type f -name "fabrexlens*" ! -name "*.sha256" -exec cp {} release-assets/ \; || true
           find artifacts -type f -name "*.sha256" -exec cp {} release-assets/ \; || true
-
-      - name: Create release archive
-        run: |
+          
+          # Create platform-specific archives
           cd release-assets
-          for dir in */; do
-            if [ -d "$dir" ]; then
-              asset_name=$(basename "$dir")
-              cd "$dir"
-              if [ -f "fabrexlens.exe" ]; then
-                zip -r "../${asset_name}.zip" .
+          for file in fabrexlens*; do
+            if [ -f "$file" ] && [ "${file##*.}" != "sha256" ]; then
+              if [[ "$file" == *.exe ]]; then
+                zip "${file%.exe}.zip" "$file" "${file}.sha256" 2>/dev/null || zip "${file%.exe}.zip" "$file" || true
               else
-                tar -czf "../${asset_name}.tar.gz" .
+                tar -czf "${file}.tar.gz" "$file" "${file}.sha256" 2>/dev/null || tar -czf "${file}.tar.gz" "$file" || true
               fi
-              cd ..
             fi
           done
+          ls -lh
 
-      - name: Upload release assets
+      - name: Create or update release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          body: ${{ steps.release_notes.outputs.notes }}
           files: release-assets/*
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.version, '-') || contains(steps.get_version.outputs.version, 'alpha') || contains(steps.get_version.outputs.version, 'beta') || contains(steps.get_version.outputs.version, 'rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
