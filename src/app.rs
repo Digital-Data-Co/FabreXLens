@@ -55,6 +55,7 @@ struct FabreXLensApp {
 }
 
 impl FabreXLensApp {
+    #[allow(clippy::new_ret_no_self)]
     fn new(
         cc: &CreationContext<'_>,
         config: Arc<AppConfig>,
@@ -624,25 +625,13 @@ impl App for FabreXLensApp {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct ReassignmentForm {
     selected_fabric: Option<String>,
     selected_endpoint: Option<String>,
     target_supernode: Option<String>,
     status: Option<String>,
     busy: bool,
-}
-
-impl Default for ReassignmentForm {
-    fn default() -> Self {
-        Self {
-            selected_fabric: None,
-            selected_endpoint: None,
-            target_supernode: None,
-            status: None,
-            busy: false,
-        }
-    }
 }
 
 impl ReassignmentForm {

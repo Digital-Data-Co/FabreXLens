@@ -106,3 +106,4 @@ Cache keys are based on `Cargo.lock` hash, so dependencies are cached until lock
 - Check that the release tag exists
 - Verify `GITHUB_TOKEN` is available (automatic for public repos)
 
+

@@ -4,7 +4,7 @@ use crate::services::api::{
 use eframe::egui::{self, Color32, RichText, TextStyle};
 use std::time::Instant;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct DashboardSnapshot {
     pub fabrics: Vec<FabrexFabric>,
     pub fabric_usage: Vec<FabrexUsage>,
@@ -12,19 +12,6 @@ pub struct DashboardSnapshot {
     pub supernodes: Vec<SupernodeNode>,
     pub endpoints: Vec<FabrexEndpoint>,
     pub alerts: Vec<String>,
-}
-
-impl Default for DashboardSnapshot {
-    fn default() -> Self {
-        Self {
-            fabrics: Vec::new(),
-            fabric_usage: Vec::new(),
-            workloads: Vec::new(),
-            supernodes: Vec::new(),
-            endpoints: Vec::new(),
-            alerts: Vec::new(),
-        }
-    }
 }
 
 #[derive(Debug)]
