@@ -76,6 +76,31 @@ src/
 - Use `cargo test` to execute mock-backed client integration tests.
 - Detox credentials during development with `cargo run -- auth-init --domain <target> --scope <name>` and `keyring` GUI utilities.
 
+## Building
+
+### Local Build
+
+See [BUILD.md](BUILD.md) for detailed build instructions.
+
+Quick release build:
+```bash
+cargo build --release
+```
+
+The binary will be at `target/release/fabrexlens` (or `fabrexlens.exe` on Windows).
+
+### CI/CD
+
+This project uses GitHub Actions for automated building and testing:
+
+- **CI Workflow**: Runs on every push/PR for quick feedback (formatting, clippy, tests)
+- **Build Workflow**: Creates release binaries for all platforms (Linux, macOS, Windows)
+- **Automatic Releases**: When you create a GitHub release, binaries are automatically attached
+
+See [.github/workflows/README.md](.github/workflows/README.md) for details.
+
+Build artifacts are available in the [Actions](https://github.com/Digital-Data-Co/FabreXLens/actions) tab.
+
 ## Roadmap
 
 - Extend observability views with historical trend charts.

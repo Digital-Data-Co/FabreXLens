@@ -2,6 +2,12 @@
 name = "fabrexlens"
 version = "0.1.0"
 edition = "2021"
+authors = ["Digital Data Co"]
+description = "Interactive observability tool for GigaIO FabreX fabrics, Gryf workloads, and Supernode infrastructure"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Digital-Data-Co/FabreXLens"
+keywords = ["gigaio", "fabrex", "observability", "gui", "networking"]
+categories = ["network-programming", "gui"]
 
 [dependencies]
 anyhow = "1.0"
@@ -11,7 +17,7 @@ dialoguer = "0.11"
 directories = "5.0"
 eframe = { version = "0.33", features = ["wgpu"] }
 keyring = "2.3"
-reqwest = { version = "0.11", features = ["json", "gzip", "stream", "rustls-tls"] }
+reqwest = { version = "0.11", features = ["json", "gzip", "stream", "rustls-tls", "rustls-tls-webpki-roots"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
@@ -21,4 +27,19 @@ url = "2.5"
 
 [dev-dependencies]
 httpmock = "0.7"
+
+[profile.release]
+opt-level = "z"      # Optimize for size
+lto = true           # Enable Link Time Optimization for smaller binaries
+codegen-units = 1    # Better optimization, slower compile
+strip = true         # Strip symbols for smaller binary size
+panic = "abort"      # Smaller binary size (no unwinding code)
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true         # Keep debug symbols for profiling
+
+[profile.dev]
+opt-level = 0
+debug = true
 
