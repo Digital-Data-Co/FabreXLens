@@ -89,7 +89,10 @@ jobs:
       - name: Create release
         run: |
           # Move all artifacts to root
-          find artifacts -type f -name "*.tar.gz*" -o -name "*.zip*" -exec mv {} . \;
+          find artifacts -type f \( -name "*.tar.gz*" -o -name "*.zip*" \) -exec mv {} . \;
+
+          # List files to verify
+          ls -la *.tar.gz* *.zip* || true
 
           # Create release with all binaries
           gh release create ${{ github.ref_name }} \
