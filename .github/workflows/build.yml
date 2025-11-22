@@ -1,220 +1,102 @@
-name: Build and Test
+name: Build and Release
 
 on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
-  RUST_BACKTRACE: 1
 
 jobs:
   build:
-    name: Build Release (${{ matrix.os }})
+    name: Build (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: fabrexlens-linux-x86_64
-            binary_name: fabrexlens
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            artifact_name: fabrexlens-linux-x86_64-musl
-            binary_name: fabrexlens
-            musl: true
+            name: linux-amd64
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: fabrexlens-macos-x86_64
-            binary_name: fabrexlens
+            name: macos-amd64
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact_name: fabrexlens-macos-arm64
-            binary_name: fabrexlens
+            name: macos-arm64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: fabrexlens-windows-x86_64
-            binary_name: fabrexlens.exe
+            name: windows-amd64
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install musl tools (Linux musl only)
-        if: matrix.musl == true
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Cache cargo registry
+      - name: Cache cargo
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.target }}-cargo-
 
-      - name: Build release binary
+      - name: Build release
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Strip binary (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          strip target/${{ matrix.target }}/release/${{ matrix.binary_name }} || true
+        if: matrix.os != 'windows-latest'
+        run: strip target/${{ matrix.target }}/release/fabrexlens* || true
 
-      - name: Get binary size
-        id: binary_size
-        run: |
-          if [ "${{ runner.os }}" == "Windows" ]; then
-            size=$(powershell -Command "(Get-Item target\${{ matrix.target }}\release\${{ matrix.binary_name }}).Length")
-            echo "size=$size" >> $GITHUB_OUTPUT
-          else
-            size=$(stat -f%z target/${{ matrix.target }}/release/${{ matrix.binary_name }} 2>/dev/null || stat -c%s target/${{ matrix.target }}/release/${{ matrix.binary_name }})
-            echo "size=$size" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}
-          path: target/${{ matrix.target }}/release/${{ matrix.binary_name }}
-          retention-days: 30
-
-      - name: Create checksum
-        if: runner.os != 'Windows'
+      - name: Create archive (Unix)
+        if: matrix.os != 'windows-latest'
         run: |
           cd target/${{ matrix.target }}/release
-          shasum -a 256 ${{ matrix.binary_name }} > ${{ matrix.binary_name }}.sha256
-          cat ${{ matrix.binary_name }}.sha256
+          tar -czf fabrexlens-${{ matrix.name }}.tar.gz fabrexlens
+          shasum -a 256 fabrexlens-${{ matrix.name }}.tar.gz > fabrexlens-${{ matrix.name }}.tar.gz.sha256
 
-      - name: Upload checksum (Unix)
-        if: runner.os != 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}-checksum
-          path: target/${{ matrix.target }}/release/${{ matrix.binary_name }}.sha256
-          retention-days: 30
-
-      - name: Create checksum (Windows)
-        if: runner.os == 'Windows'
+      - name: Create archive (Windows)
+        if: matrix.os == 'windows-latest'
         run: |
-          cd target\${{ matrix.target }}\release
-          certutil -hashfile ${{ matrix.binary_name }} SHA256 > ${{ matrix.binary_name }}.sha256
+          cd target/${{ matrix.target }}/release
+          powershell Compress-Archive fabrexlens.exe fabrexlens-${{ matrix.name }}.zip
+          certutil -hashfile fabrexlens-${{ matrix.name }}.zip SHA256 | findstr /v "hash" | findstr /v "CertUtil" > fabrexlens-${{ matrix.name }}.zip.sha256
 
-      - name: Upload checksum (Windows)
-        if: runner.os == 'Windows'
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}-checksum
-          path: target/${{ matrix.target }}/release/${{ matrix.binary_name }}.sha256
-          retention-days: 30
+          name: fabrexlens-${{ matrix.name }}
+          path: target/${{ matrix.target }}/release/fabrexlens-*
 
   release:
-    name: Create Release
-    needs: [build]
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Get version from tag
-        id: get_version
-        run: |
-          if [ "${{ github.event_name }}" == "release" ]; then
-            VERSION="${{ github.event.release.tag_name }}"
-          else
-            VERSION="${GITHUB_REF#refs/tags/}"
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "tag=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
-
-      - name: Generate release notes
-        id: release_notes
-        run: |
-          if [ "${{ github.event_name }}" == "release" ]; then
-            NOTES="${{ github.event.release.body }}"
-          else
-            # Generate changelog from git commits since last tag
-            PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-            if [ -z "$PREV_TAG" ]; then
-              NOTES="## What's Changed
-
-Initial release of FabreXLens!
-
-### Features
-- Interactive observability tool for GigaIO FabreX fabrics
-- Secure credential management with system keychain
-- Real-time dashboard with auto-refresh
-- Multi-platform support (Linux, macOS, Windows)
-
-### Downloads
-Binaries are available for all supported platforms below."
-            else
-              NOTES="## What's Changed
-
-### Changes since $PREV_TAG
-
-$(git log ${PREV_TAG}..HEAD --pretty=format:'- %s (%h)' --no-merges)
-
-### Downloads
-Binaries are available for all supported platforms below."
-            fi
-          fi
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Prepare release assets
+      - name: Create release
         run: |
-          mkdir -p release-assets
-          # Copy binaries and checksums
-          find artifacts -type f -name "fabrexlens*" ! -name "*.sha256" -exec cp {} release-assets/ \; || true
-          find artifacts -type f -name "*.sha256" -exec cp {} release-assets/ \; || true
-          
-          # Create platform-specific archives
-          cd release-assets
-          for file in fabrexlens*; do
-            if [ -f "$file" ] && [ "${file##*.}" != "sha256" ]; then
-              if [[ "$file" == *.exe ]]; then
-                zip "${file%.exe}.zip" "$file" "${file}.sha256" 2>/dev/null || zip "${file%.exe}.zip" "$file" || true
-              else
-                tar -czf "${file}.tar.gz" "$file" "${file}.sha256" 2>/dev/null || tar -czf "${file}.tar.gz" "$file" || true
-              fi
-            fi
-          done
-          ls -lh
+          # Move all artifacts to root
+          find artifacts -type f -name "*.tar.gz*" -o -name "*.zip*" -exec mv {} . \;
 
-      - name: Create or update release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.get_version.outputs.tag }}
-          name: Release ${{ steps.get_version.outputs.version }}
-          body: ${{ steps.release_notes.outputs.notes }}
-          files: release-assets/*
-          draft: false
-          prerelease: ${{ contains(steps.get_version.outputs.version, '-') || contains(steps.get_version.outputs.version, 'alpha') || contains(steps.get_version.outputs.version, 'beta') || contains(steps.get_version.outputs.version, 'rc') }}
+          # Create release with all binaries
+          gh release create ${{ github.ref_name }} \
+            --title "Release ${{ github.ref_name }}" \
+            --notes "Multi-platform binaries for FabreXLens" \
+            --generate-notes \
+            *.tar.gz* *.zip*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
