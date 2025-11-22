@@ -66,9 +66,20 @@ src/
 
 ## Documentation
 
-- `docs/architecture.md` outlines the core modules, runtime flow, and background polling model.
-- Place official FabreX / Gryf / Supernode / Redfish PDF references inside `docs/api/` (they are gitignored by default).
-- The CLI usage is discoverable via `cargo run -- --help`.
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[📖 Documentation Index](docs/index.md)** - Complete documentation table of contents
+- **[📦 Installation Guide](docs/installation.md)** - Platform-specific setup instructions
+- **[👥 User Guide](docs/user-guide.md)** - Complete usage tutorial and features
+- **[⚙️ Configuration](docs/configuration.md)** - All settings and customization options
+- **[🔧 Troubleshooting](docs/troubleshooting.md)** - Solutions to common problems
+- **[🛠️ Contributing](docs/contributing.md)** - Development and contribution guide
+- **[🏗️ Architecture](docs/architecture.md)** - System design and internals
+
+**Quick Links:**
+- [Download Latest Release](https://github.com/Digital-Data-Co/FabreXLens/releases)
+- [Report Issues](https://github.com/Digital-Data-Co/FabreXLens/issues)
+- [Community Discussions](https://github.com/Digital-Data-Co/FabreXLens/discussions)
 
 ## Development Tips
 
